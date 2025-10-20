@@ -1,0 +1,27 @@
+import torch
+import torch.nn.functional as F
+
+def dpo_loss(policy_log_probs, ref_log_probs, preferred_log_probs, rejected_log_probs, beta=0.1):
+    """
+    Minimal DPO Loss Implementation.
+
+    Focus: Directly optimizes the policy against the reference policy using preference pairs 
+    to maximize efficiency and reduce reliance on a separate Reward Model.
+    """
+    # Calculate the log-odds ratio component (policy advantage over reference)
+    pi_preferred_advantage = preferred_log_probs - policy_log_probs
+    pi_rejected_advantage = rejected_log_probs - policy_log_probs
+
+    # Calculate the ratio log(pi_k(x)) - log(pi_ref(x))
+    log_ratio = (pi_preferred_advantage) - (pi_rejected_advantage)
+
+    # The DPO loss function structure
+    loss = -F.logsigmoid(beta * log_ratio)
+    return loss.mean()
+
+# --- Cost Efficiency Metric Placeholder ---
+def report_cost_efficiency(samples_used_dpo, gpus_hours_dpo, baseline_cost_rlhf):
+    """A function to demonstrate the reporting methodology for alignment cost."""
+    efficiency_metric = baseline_cost_rlhf / (samples_used_dpo * gpus_hours_dpo)
+    print(f"Alignment Cost Efficiency Multiplier: {efficiency_metric:.2f}X")
+    return efficiency_metric
